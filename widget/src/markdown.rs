@@ -781,7 +781,7 @@ fn parse_with<'a>(
 }
 
 /// Configuration controlling Markdown rendering in [`view`].
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct Settings {
     /// The base text size.
     pub text_size: Pixels,
@@ -799,6 +799,8 @@ pub struct Settings {
     pub h6_size: Pixels,
     /// The text size used in code blocks.
     pub code_size: Pixels,
+    /// Base path for local images
+    pub image_base_path: Url,
     /// The spacing to be used between elements.
     pub spacing: Pixels,
 }
@@ -821,6 +823,26 @@ impl Settings {
             h5_size: text_size,
             h6_size: text_size,
             code_size: text_size * 0.75,
+            image_base_path: "/".to_string(),
+            spacing: text_size * 0.875,
+        }
+    }
+
+    /// Use everything as default but add a folder
+    /// as base of the image path
+    pub fn with_image_path(image_base_path: Url) -> Self {
+        let text_size = 16.into();
+
+        Self {
+            text_size,
+            h1_size: text_size * 2.0,
+            h2_size: text_size * 1.75,
+            h3_size: text_size * 1.5,
+            h4_size: text_size * 1.25,
+            h5_size: text_size,
+            h6_size: text_size,
+            code_size: text_size * 0.75,
+            image_base_path,
             spacing: text_size * 0.875,
         }
     }
@@ -925,13 +947,14 @@ where
         h5_size,
         h6_size,
         code_size,
+        image_base_path, 
         spacing,
-    } = settings;
+    } = settings.clone();
 
     let blocks = items.into_iter().enumerate().map(|(i, item)| match item {
         Item::Image(url) => {
             let path =
-                format!("/home/matteo/.cache/matteo_contribution_img/{url}");
+                format!("{image_base_path}/{url}");
             container(image(path)).into()
         }
         Item::Heading(level, heading) => {
@@ -961,7 +984,7 @@ where
                         items,
                         Settings {
                             spacing: settings.spacing * 0.6,
-                            ..settings
+                            ..settings.clone()
                         },
                         style
                     )
@@ -982,7 +1005,7 @@ where
                     items,
                     Settings {
                         spacing: settings.spacing * 0.6,
-                        ..settings
+                        ..settings.clone()
                     },
                     style
                 )
